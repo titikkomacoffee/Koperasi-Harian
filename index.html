@@ -3,75 +3,196 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Koperasi Harian</title>
+<title>Dashboard Koperasi</title>
 <style>
-body{font-family:sans-serif;padding:10px;background:#f0f2f5}
-.card{background:white;padding:15px;border-radius:10px;margin-bottom:10px;box-shadow:0 2px 4px rgba(0,0,0,0.1)}
-input,select,button{width:100%;padding:10px;margin-top:5px;border:1px solid #ccc;border-radius:5px}
-button{background:#25D366;color:white;border:none;font-weight:bold}
-.telat{color:red;font-weight:bold}
+:root{--blue:#3b82f6;--green:#22c55e;--orange:#f97316;--red:#ef4444;--bg:#f5f7fa}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif}
+body{display:flex;background:var(--bg)}
+
+/* SIDEBAR */
+.sidebar{width:250px;background:white;height:100vh;padding:15px;box-shadow:2px 0 10px rgba(0,0,0,0.05);transition:0.3s;position:fixed;left:0;top:0;z-index:100}
+.sidebar.logo{display:flex;align-items:center;gap:10px;font-weight:bold;font-size:20px;margin-bottom:25px}
+.sidebar a{display:flex;align-items:center;gap:10px;padding:12px;border-radius:10px;text-decoration:none;color:#666;margin-bottom:5px;font-weight:500}
+.sidebar a.active{background:var(--blue);color:white}
+.sidebar a:hover{background:#eee}
+
+/* MAIN */
+.main{flex:1;margin-left:250px;padding:20px;transition:0.3s}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.topbar.user{display:flex;align-items:center;gap:10px;font-weight:bold}
+.topbar.menu-btn{display:none;font-size:24px;cursor:pointer}
+
+/* CARDS */
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:20px}
+.card{padding:20px;border-radius:15px;color:white;display:flex;justify-content:space-between;align-items:center}
+.card h2{font-size:32px}
+.card p{font-size:14px;opacity:0.9}
+.card.blue{background:linear-gradient(135deg,#38bdf8,#0ea5e9)}
+.card.green{background:linear-gradient(135deg,#4ade80,#22c55e)}
+.card.orange{background:linear-gradient(135deg,#fb923c,#f97316)}
+.card.red{background:linear-gradient(135deg,#f87171,#ef4444)}
+
+/* TOTAL DANA + OVERVIEW */
+.row{display:grid;grid-template-columns:2fr 1fr;gap:15px;margin-bottom:20px}
+.total{background:linear-gradient(135deg,#38bdf8,#0ea5e9);color:white;padding:30px;border-radius:15px;display:flex;justify-content:space-between;align-items:center}
+.total h1{font-size:36px}
+.overview{background:white;padding:20px;border-radius:15px}
+.overview h3{margin-bottom:15px}
+.overview.item{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:14px}
+.dot{width:10px;height:10px;border-radius:50%}
+
+/* FORM */
+.form-card{background:white;padding:20px;border-radius:15px;margin-bottom:20px}
+input,select,button{width:100%;padding:12px;margin-top:10px;border:1px solid #ddd;border-radius:8px}
+button{background:var(--green);color:white;border:none;font-weight:bold;cursor:pointer}
+.list-item{background:white;padding:12px;border-radius:10px;margin-bottom:8px}
+.page{display:none}.page.active{display:block}
+
+/* RESPONSIVE UNTUK HP */
+@media(max-width:1024px){
+ .cards{grid-template-columns:repeat(2,1fr)}
+ .row{grid-template-columns:1fr}
+}
+@media(max-width:768px){
+ .sidebar{left:-250px}
+ .sidebar.show{left:0}
+ .main{margin-left:0}
+ .topbar.menu-btn{display:block}
+ .cards{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
-<h2>📒 KOPERASI HARIAN</h2>
 
-<div class="card">
-<h3>Tambah Pinjaman</h3>
-<input id="nama" placeholder="Nama Nasabah">
-<input id="nohp" placeholder="No HP 6281...">
-<input id="tgl" type="date">
-<select id="jenis"><option>Harian</option><option>Mingguan</option></select>
-<select id="lama"><option>24</option><option>30</option><option>4</option><option>5</option><option>6</option></select>
-<input id="jumlah" type="number" placeholder="Jumlah Pinjaman">
-<input id="jasa" type="number" placeholder="Jasa Manual">
-<button onclick="simpan()">Simpan</button>
+<div class="sidebar" id="sidebar">
+<div class="logo">📊 <span>Koperasi</span></div>
+<a onclick="showPage('dashboard')" class="active">📊 Dashboard</a>
+<a onclick="showPage('nasabah')">👥 Anggota</a>
+<a onclick="showPage('pegawai')">👨‍💼 Pegawai</a>
+<a onclick="showPage('simpanan')">💰 Simpanan</a>
+<a onclick="showPage('pinjaman')">📄 Pinjaman</a>
+<a onclick="showPage('angsuran')">📝 Angsuran</a>
+<a>⚙️ Users</a>
+<a>📞 Contact</a>
 </div>
 
-<div id="list"></div>
+<div class="main">
+<div class="topbar">
+<span class="menu-btn" onclick="document.getElementById('sidebar').classList.toggle('show')">☰</span>
+<h2>Dashboard</h2>
+<div class="user"><img src="https://i.pravatar.cc/40" style="border-radius:50%"> Administrator</div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard" class="page active">
+<div class="cards">
+<div class="card blue"><div><h2 id="simpWajib">28</h2><p>Simpanan Wajib</p></div><span style="font-size:30px">🔖</span></div>
+<div class="card green"><div><h2 id="simpPokok">29</h2><p>Simpanan Pokok</p></div><span style="font-size:30px">📅</span></div>
+<div class="card orange"><div><h2 id="simpSuka">0</h2><p>Simpanan Sukarela</p></div><span style="font-size:30px">➡️</span></div>
+<div class="card red"><div><h2 id="totalPinjam">0</h2><p>Pinjaman</p></div><span style="font-size:30px">⬅️</span></div>
+</div>
+
+<div class="row">
+<div class="total">
+<div><h1>Rp. <span id="totalDana">0</span></h1><p>Total Dana</p></div>
+<span style="font-size:40px">📅</span>
+</div>
+<div class="overview">
+<h3>Card's Overview</h3>
+<div class="item"><div class="dot" style="background:var(--blue)"></div>40% Simpanan Wajib</div>
+<div class="item"><div class="dot" style="background:var(--green)"></div>35% Simpanan Pokok</div>
+<div class="item"><div class="dot" style="background:var(--orange)"></div>25% Simpanan Sukarela</div>
+<div class="item"><div class="dot" style="background:var(--red)"></div>15% Pinjaman</div>
+</div>
+</div>
+</div>
+
+<!-- NASABAH -->
+<div id="nasabah" class="page">
+<h2>Data Nasabah</h2>
+<div class="form-card">
+<h3>Form Nasabah Baru</h3>
+<input id="namaNasabah" placeholder="Nama Lengkap">
+<input id="nohpNasabah" placeholder="No HP 6281...">
+<input id="alamatNasabah" placeholder="Alamat">
+<button onclick="simpanNasabah()">Simpan Nasabah</button>
+</div>
+<div id="listNasabah"></div>
+</div>
+
+<!-- PINJAMAN -->
+<div id="pinjaman" class="page">
+<h2>Form Peminjam Baru</h2>
+<div class="form-card">
+<select id="pilihNasabah"></select>
+<input id="tgl" type="date">
+<select id="jenis" onchange="gantiJenis()"><option>Harian</option><option>Mingguan</option></select>
+<select id="lama"><option value="24">24 Hari</option><option value="30">30 Hari</option><option value="4">4 Minggu</option><option value="5">5 Minggu</option><option value="6">6 Minggu</option></select>
+<input id="jumlah" type="number" placeholder="Jumlah Pinjaman">
+<input id="jasa" type="number" placeholder="Jasa/Bunga">
+<button onclick="simpanPinjaman()">Simpan & Buat Jadwal</button>
+</div>
+<div id="listPinjaman"></div>
+</div>
+
+</div>
 
 <script>
-let data = JSON.parse(localStorage.getItem('kop')) || [];
+let nasabah = JSON.parse(localStorage.getItem('nasabah')) || [];
+let pinjaman = JSON.parse(localStorage.getItem('pinjaman')) || [];
 document.getElementById('tgl').valueAsDate = new Date();
 
-function simpan(){
-  let jumlah = parseInt(document.getElementById('jumlah').value) || 0;
-  let jasa = parseInt(document.getElementById('jasa').value) || 0;
-  let lama = parseInt(document.getElementById('lama').value);
-  let jenis = document.getElementById('jenis').value;
-  let tgl = new Date(document.getElementById('tgl').value);
-  let jatuh = new Date(tgl);
-  jatuh.setDate(jatuh.getDate() + (jenis=='Harian'?lama:lama*7));
-
-  data.push({
-    nama:document.getElementById('nama').value,
-    nohp:document.getElementById('nohp').value,
-    jumlah,jasa,total:jumlah+jasa,jatuh:jatuh.toISOString().split('T')[0]
-  });
-  localStorage.setItem('kop',JSON.stringify(data));
-  tampil();
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.sidebar a').forEach(a=>a.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.target.classList.add('active');
+  document.getElementById('sidebar').classList.remove('show');
+  tampilNasabah(); tampilPinjaman(); updateDashboard();
 }
 
-function wa(nama,nohp,total,jatuh){
-  let pesan = `Yth ${nama} Jatuh tempo ${jatuh}. Bayar: Rp${total.toLocaleString('id-ID')}`;
-  window.open(`https://wa.me/${nohp}?text=${encodeURIComponent(pesan)}`);
+function simpanNasabah(){
+  nasabah.push({nama:namaNasabah.value,nohp:nohpNasabah.value,alamat:alamatNasabah.value});
+  localStorage.setItem('nasabah',JSON.stringify(nasabah));
+  namaNasabah.value=nohpNasabah.value=alamatNasabah.value='';
+  tampilNasabah(); updateDashboard();
 }
-
-function tampil(){
-  let html = '';
-  data.forEach((d,i)=>{
-    let telat = new Date(d.jatuh) < new Date()? 'telat' : '';
-    html += `<div class="card">
-      <b>${d.nama}</b><br>
-      Pinjam: Rp${d.jumlah.toLocaleString('id-ID')}<br>
-      Jasa: Rp${d.jasa.toLocaleString('id-ID')}<br>
-      Total: Rp${d.total.toLocaleString('id-ID')}<br>
-      Jatuh: <span class="${telat}">${d.jatuh}</span><br>
-      <button onclick="wa('${d.nama}','${d.nohp}',${d.total},'${d.jatuh}')">Kirim WA</button>
-    </div>`;
-  });
-  document.getElementById('list').innerHTML = html;
+function tampilNasabah(){
+  listNasabah.innerHTML = '<h3>Daftar Nasabah</h3>' + nasabah.map(n=>`<div class="list-item"><b>${n.nama}</b><br>${n.nohp}<br>${n.alamat}</div>`).join('');
+  pilihNasabah.innerHTML = '<option>-- Pilih Nasabah --</option>' + nasabah.map((n,i)=>`<option value="${i}">${n.nama} - ${n.nohp}</option>`).join('');
 }
-tampil();
+function gantiJenis(){
+  lama.innerHTML = jenis.value=='Harian' 
+ ? '<option value="24">24 Hari</option><option value="30">30 Hari</option>'
+  : '<option value="4">4 Minggu</option><option value="5">5 Minggu</option><option value="6">6 Minggu</option>';
+}
+function simpanPinjaman(){
+  let idx = pilihNasabah.value; if(idx=='-- Pilih Nasabah --') return alert('Pilih nasabah dulu');
+  let n = nasabah[idx]; let jumlah=+jumlah.value; let jasa=+jasa.value; let lama=+lama.value;
+  let total = jumlah + jasa; let cicilan = Math.round(total / lama);
+  let jadwal = []; let tglAwal = new Date(tgl.value);
+  for(let i=0; i<lama; i++){
+    let t = new Date(tglAwal);
+    t.setDate(t.getDate() + (jenis.value=='Harian'? i+1 : (i+1)*7));
+    jadwal.push({tgl:t.toISOString().split('T')[0], bayar:cicilan, status:'Belum Bayar'});
+  }
+  pinjaman.push({...n, jenis:jenis.value,jumlah,jasa,total,lama,cicilan,jadwal});
+  localStorage.setItem('pinjaman',JSON.stringify(pinjaman));
+  tampilPinjaman(); updateDashboard();
+}
+function tampilPinjaman(){
+  listPinjaman.innerHTML = '<h3>Daftar Pinjaman</h3>' + pinjaman.map(d=>`
+  <div class="list-item"><b>${d.nama}</b> - ${d.jenis} ${d.lama}x - Cicilan: Rp${d.cicilan.toLocaleString('id-ID')}
+  ${d.jadwal.map(j=>`<div style="margin-left:15px;font-size:12px">${j.tgl} - Rp${j.bayar.toLocaleString('id-ID')} - ${j.status}</div>`).join('')}
+  </div>`).join('');
+}
+function updateDashboard(){
+  jmlNasabah.innerText = nasabah.length;
+  totalPinjam.innerText = pinjaman.length;
+  let total = pinjaman.reduce((a,b)=>a+b.total,0);
+  totalDana.innerText = total.toLocaleString('id-ID');
+}
+tampilNasabah(); tampilPinjaman(); updateDashboard();
 </script>
 </body>
 </html>
