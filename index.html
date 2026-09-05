@@ -4,14 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Koperasi Harian</title>
-<link rel="icon" type="image/png" href="logo.png"> <!-- INI LOGO DI TAB -->
+<link rel="icon" type="image/png" href="logo.png">
 <style>
 :root{--blue:#1e4d8b;--green:#22c55e;--orange:#f97316;--red:#ef4444;--wa:#25D366;--bg:#f5f7fa;--kuning:#ffc107}
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif}
 body{display:flex;background:var(--bg)}
 .sidebar{width:250px;background:white;height:100vh;padding:15px;box-shadow:2px 0 10px rgba(0,0,0,0.05);position:fixed;left:0;top:0;z-index:100;transition:0.3s}
-.sidebar.logo{display:flex;align-items:center;gap:10px;font-weight:bold;font-size:18px;margin-bottom:25px;color:var(--blue)}
-.sidebar.logo img{width:40px;height:40px;border-radius:50%}
+.sidebar.logo{display:flex;align-items:center;gap:12px;font-weight:bold;font-size:18px;margin-bottom:25px;color:var(--blue);padding-bottom:15px;border-bottom:1px solid #eee}
+.sidebar.logo img{width:40px;height:40px;object-fit:contain} /* DIKECILIN JADI 40px */
 .sidebar a{display:flex;align-items:center;gap:10px;padding:12px;border-radius:10px;text-decoration:none;color:#666;margin-bottom:5px;font-weight:500;cursor:pointer}
 .sidebar a.active{background:var(--blue);color:white}
 .main{flex:1;margin-left:250px;padding:20px;transition:0.3s}
@@ -35,7 +35,7 @@ button:hover{opacity:0.9}
 .btn-wa{background:var(--wa);width:auto;padding:6px 12px;font-size:12px}
 .btn-lunas{background:#6b7280;width:auto;padding:6px 12px;font-size:12px}
 .list-item{background:white;padding:15px;border-radius:10px;margin-bottom:10px}
-.jadwal{margin-left:15px;font-size:13px;background:#f9f9f9;padding:8px;border-radius:6px;margin-top:5px;display:flex;justify-content:space-between;align-items:center;gap:5px}
+.jadwal{margin-left:15px;font-size:13px;background:#f9f9f9;padding:8px;border-radius:6px;margin-top:5px;display:flex;justify-content:space-between;align-items:center;gap:5px;flex-wrap:wrap} /* TAMBAH FLEX-WRAP BUAT HP */
 .telat{color:red;font-weight:bold}
 .page{display:none}.page.active{display:block}
 @media(max-width:1024px){.cards{grid-template-columns:repeat(2,1fr)}.row{grid-template-columns:1fr}}
@@ -46,7 +46,7 @@ button:hover{opacity:0.9}
 
 <div class="sidebar" id="sidebar">
 <div class="logo">
-  <img src="logo.png" alt="Logo"> <!-- INI LOGO DI SIDEBAR -->
+  <img src="logo.png" alt="Logo">
   <span>Koperasi Harian</span>
 </div>
 <a onclick="showPage('dashboard')" class="active">📊 Dashboard</a>
@@ -129,15 +129,15 @@ button:hover{opacity:0.9}
 let nasabah = JSON.parse(localStorage.getItem('nasabah')) || [];
 let pinjaman = JSON.parse(localStorage.getItem('pinjaman')) || [];
 let simpanan = JSON.parse(localStorage.getItem('simpanan')) || [];
-tgl.valueAsDate = new Date();
+document.getElementById('tgl').valueAsDate = new Date();
 
 function showPage(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.sidebar a').forEach(a=>a.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   event.target.classList.add('active');
-  sidebar.classList.remove('show');
-  judulHalaman.innerText = event.target.innerText.trim();
+  document.getElementById('sidebar').classList.remove('show');
+  document.getElementById('judulHalaman').innerText = event.target.innerText.trim();
   tampilSemua();
 }
 
