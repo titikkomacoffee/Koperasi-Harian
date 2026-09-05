@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover">
+<title>Koperasi Harian</title>
+<meta name="theme-color" content="#235482">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  body { -webkit-tap-highlight-color: transparent; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  input, select, button { font-size: 16px; }
+  ::-webkit-scrollbar { height: 8px; width: 8px; }
+  ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+  .status-lunas { background-color: #ecfdf5; }
+  .status-telat { background-color: #fef2f2; }
+  .status-segera { background-color: #fffbeb; }
+
+  .sidebar-link { display:flex; align-items:center; gap:.75rem; padding:.65rem 1rem; border-radius:.6rem; color:#64748b; font-weight:600; font-size:.9rem; }
+  .sidebar-link.active { background:#235482; color:#fff; box-shadow:0 4px 10px rgba(35,84,130,.35); }
+  .sidebar-link:not(.active):hover { background:#f1f5f9; color:#334155; }
+
+  #sidebar { transition: transform .25s ease; }
+  @media (max-width: 1023px) {
+    #sidebar { position:fixed; top:0; left:0; height:100%; transform:translateX(-100%); z-index:50; }
+    #sidebar.open { transform:translateX(0); }
+  }
+
+  .stat-card { border-radius:1rem; padding:1.1rem; color:#fff; position:relative; overflow:hidden; }
+  .stat-card .icon-badge { width:2.6rem; height:2.6rem; border-radius:.85rem; background:rgba(255,255,255,.28); display:flex; align-items:center; justify-content:center; }
+</style>
+</head>
+<body class="bg-slate-100 text-slate-800">
+
+<div id="toast" class="fixed top-4 left-1/2 -translate-x-1/2 z-[60] hidden px-4 py-3 rounded-lg shadow-lg text-white text-sm max-w-[90%] text-center"></div>
+
+<!-- ===================== AUTH SCREEN ===================== -->
+<div id="authScreen" class="min-h-screen flex items-center justify-center p-4 bg-slate-50">
+  <div class="w-full max-w-sm bg-white rounded-2xl shadow-lg p-6 border border-slate-100">
+    <div class="flex flex-col items-center mb-5">
+      <img src="logo-full.png" alt="Koperasi Harian" class="w-40 h-auto mb-1" onerror="this.style.display='none'">
+      <p class="text-sm text-slate-500">Simpan Pinjam Pribadi</p>
+    </div>
+
+    <!-- ===== HALAMAN LOGIN ===== -->
+    <div id="pageLogin">
+      <h2 class="text-lg font-bold text-slate-700 mb-3">Masuk ke Akun</h2>
+      <form id="loginForm" class="space-y-3">
+        <div>
+          <label class="text-sm font-medium">Email</label>
+          <input type="email" id="loginEmail" required class="w-full mt-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#235482]">
+        </div>
+        <div>
+          <label class="text-sm font-medium">Password</label>
+          <input type="password" id="loginPassword" required class="w-full mt-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#235482]">
+        </div>
+        <button type="submit" class="w-full bg-[#235482] text-white font-semibold py-2.5 rounded-lg active:bg-[#1c4468]">Masuk</button>
+      </form>
+      <p class="text-sm text-center mt-4 text-slate-500">
+        Belum punya akun? <button id="goToRegisterBtn" class="text-[#235482] font-semibold">Daftar akun</button>
+      </p>
+    </div>
+
+    <!-- ===== HALAMAN DAFTAR ===== -->
+    <div id="pageRegister" class="hidden">
+      <h2 class="text-lg font-bold text-slate-700 mb-3">Buat Akun Baru</h2>
+      <form id="registerForm" class="space-y-3">
+        <div>
+          <label class="text-sm font-medium">Email</label>
+          <input type="email" id="regEmail" required class="w-full mt-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#235482]">
+        </div>
+        <div>
+          <label class="text-sm font-medium">Password</label>
+          <input type="password" id="regPassword" required minlength="6" class="w-full mt-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#235482]">
+        </div>
+        <button type="submit" class="w-full bg-[#235482] text-white font-semibold py-2.5 rounded-lg active:bg-[#1c4468]">Daftar</button>
+      </form>
+      <p class="text-sm text-center mt-4 text-slate-500">
+        Sudah punya akun? <button id="goToLoginBtn" class="text-[#235482] font-semibold">Masuk</button>
+      </p>
+    </div>
+
+    <p id="authMsg" class="text-sm text-center mt-3 hidden"></p>
+  </div>
+</div>
+
+<!-- ===================== APP SCREEN ===================== -->
+<div id="appScreen" class="hidden min-h-screen">
+
+  <!-- Topbar -->
+  <div class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 sticky top-0 z-40">
+    <div class="flex items-center gap-3">
+      <img src="icon-192.png" alt="logo" class="w-9 h-9" onerror="this.style.display='none'">
+      <button id="hamburgerBtn" class="lg:hidden p-2 rounded-lg hover:bg-slate-100">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <span class="font-bold hidden sm:block text-slate-700">Koperasi Harian</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <button id="installBtn" class="hidden text-xs bg-[#235482] text-white font-semibold px-3 py-1.5 rounded-lg">Install App</button>
+      <button id="settingsBtn" class="flex items-center gap-2">
+        <div class="w-9 h-9 rounded-full bg-slate-200 flex items-center justify-center text-slate-500">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>
+        </div>
+        <span id="userEmailLabel" class="font-semibold text-sm text-slate-700 hidden md:block">Pengguna</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="flex">
+    <!-- Sidebar -->
+    <div id="sidebarOverlay" class="hidden fixed inset-0 bg-black/40 z-40 lg:hidden"></div>
+    <div id="sidebar" class="w-64 bg-white border-r border-slate-200 min-h-[calc(100vh-4rem)] pt-4 px-3 space-y-1">
+      <button data-nav="dashboard" class="sidebar-link active w-full">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </button>
+      <button data-nav="data" class="sidebar-link w-full">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v4H4z"/><path d="M4 12h16M4 20h16"/></svg>
+        Data Pinjaman
+      </button>
+      <button data-nav="settings" class="sidebar-link w-full">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.34 1.87l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.7 1.7 0 00-1.87-.34 1.7 1.7 0 00-1 1.55V21a2 2 0 11-4 0v-.09A1.7 1.7 0 009 19.4a1.7 1.7 0 00-1.87.34l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.7 1.7 0 004.6 15a1.7 1.7 0 00-1.55-1H3a2 2 0 110-4h.09A1.7 1.7 0 004.6 9a1.7 1.7 0 00-.34-1.87l-.06-.06a2 2 0 112.83-2.83l.06.06A1.7 1.7 0 009 4.6a1.7 1.7 0 001-1.55V3a2 2 0 114 0v.09a1.7 1.7 0 001 1.55 1.7 1.7 0 001.87-.34l.06-.06a2 2 0 112.83 2.83l-.06.06A1.7 1.7 0 0019.4 9a1.7 1.7 0 001.55 1H21a2 2 0 110 4h-.09a1.7 1.7 0 00-1.55 1z"/></svg>
+        Pengaturan
+      </button>
+      <button id="logoutBtn" class="sidebar-link w-full text-red-500 hover:!bg-red-50">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Keluar
+      </button>
+    </div>
+
+    <!-- Main content -->
+    <div class="flex-1 p-4 lg:p-6 max-w-6xl mx-auto w-full">
+
+      <!-- Notifikasi H-3 -->
+      <div id="notifBox" class="hidden bg-amber-50 border border-amber-300 text-amber-900 p-3 rounded-xl text-sm mb-4"></div>
+
+      <!-- ===== VIEW: DASHBOARD ===== -->
+      <div id="viewDashboard">
+        <h2 class="text-lg font-bold text-slate-700 mb-4">Dashboard</h2>
+
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+          <div class="stat-card" style="background:linear-gradient(135deg,#38bdf8,#0ea5e9)">
+            <div class="icon-badge mb-3"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 2l3 7h7l-5.5 4.5L18.5 21 12 17l-6.5 4 2-7.5L2 9h7z"/></svg></div>
+            <p id="cardPiutang" class="text-xl font-bold">Rp0</p>
+            <p class="text-xs opacity-90">Piutang Aktif</p>
+          </div>
+          <div class="stat-card" style="background:linear-gradient(135deg,#34d399,#10b981)">
+            <div class="icon-badge mb-3"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></div>
+            <p id="cardDanaKeluar" class="text-xl font-bold">Rp0</p>
+            <p class="text-xs opacity-90">Total Dana Keluar</p>
+          </div>
+          <div class="stat-card" style="background:linear-gradient(135deg,#fbbf24,#f59e0b)">
+            <div class="icon-badge mb-3"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg></div>
+            <p id="cardJasa" class="text-xl font-bold">Rp0</p>
+            <p class="text-xs opacity-90">Total Jasa (Lunas)</p>
+          </div>
+          <div class="stat-card" style="background:linear-gradient(135deg,#fb923c,#ef4444)">
+            <div class="icon-badge mb-3"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg></div>
+            <p id="cardTelat" class="text-xl font-bold">0</p>
+            <p class="text-xs opacity-90">Jumlah Telat Bayar</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-3 mb-4">
+          <div class="lg:col-span-2 stat-card flex items-center justify-between" style="background:linear-gradient(135deg,#38bdf8,#3b82f6)">
+            <div>
+              <p id="cardTotalPerputaran" class="text-3xl font-bold mb-1">Rp0</p>
+              <p class="text-sm opacity-90">Total Perputaran Dana</p>
+            </div>
+            <div class="icon-badge"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/><path d="M9 16l2 2 4-4"/></svg></div>
+          </div>
+
+          <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+            <p class="font-bold text-slate-700 mb-2">Ringkasan Dana</p>
+            <div class="flex items-center gap-4">
+              <canvas id="overviewChart" width="90" height="90"></canvas>
+              <div id="overviewLegend" class="text-xs space-y-1 text-slate-600"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+          <p class="font-bold text-slate-700 mb-2">Jasa per Bulan (Lunas)</p>
+          <canvas id="jasaChart" height="160"></canvas>
+        </div>
+      </div>
+
+      <!-- ===== VIEW: DATA PINJAMAN ===== -->
+      <div id="viewData" class="hidden">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-bold text-slate-700">Data Pinjaman</h2>
+          <button id="exportPdfBtn" class="bg-slate-700 text-white px-3 py-2 rounded-lg font-semibold text-sm whitespace-nowrap">📄 Export PDF</button>
+        </div>
+
+        <!-- Form Tambah -->
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 mb-4">
+          <button id="toggleFormBtn" class="w-full flex items-center justify-between font-semibold text-[#235482]">
+            <span>+ Tambah Pinjaman</span>
+            <span id="toggleFormIcon">▼</span>
+          </button>
+          <form id="pinjamanForm" class="hidden mt-3 space-y-3">
+            <div>
+              <label class="text-sm font-medium">Nama Peminjam</label>
+              <input type="text" id="fNama" required class="w-full mt-1 px-3 py-2 border rounded-lg">
+            </div>
+            <div>
+              <label class="text-sm font-medium">No. WhatsApp</label>
+              <input type="text" id="fNoHp" placeholder="08xxxxxxxxxx" required class="w-full mt-1 px-3 py-2 border rounded-lg">
+            </div>
+            <div>
+              <label class="text-sm font-medium">Tanggal Pinjam</label>
+              <input type="date" id="fTglPinjam" required class="w-full mt-1 px-3 py-2 border rounded-lg">
+            </div>
+
+            <div>
+              <label class="text-sm font-medium block mb-1">Jenis Tenor</label>
+              <div class="flex gap-4">
+                <label class="flex items-center gap-1.5">
+                  <input type="radio" name="jenisTenor" value="Harian" id="radioHarian" checked class="w-4 h-4">
+                  <span>Harian</span>
+                </label>
+                <label class="flex items-center gap-1.5">
+                  <input type="radio" name="jenisTenor" value="Mingguan" id="radioMingguan" class="w-4 h-4">
+                  <span>Mingguan</span>
+                </label>
+              </div>
+            </div>
+            <div>
+              <label class="text-sm font-medium">Lama Tenor</label>
+              <select id="fLamaTenor" class="w-full mt-1 px-3 py-2 border rounded-lg"></select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="text-sm font-medium">Jumlah Pinjam (Rp)</label>
+                <input type="number" id="fJumlahPinjam" min="0" required class="w-full mt-1 px-3 py-2 border rounded-lg">
+              </div>
+              <div>
+                <label class="text-sm font-medium">Jasa (Rp)</label>
+                <input type="number" id="fJasa" min="0" value="0" required class="w-full mt-1 px-3 py-2 border rounded-lg">
+              </div>
+            </div>
+            <div class="bg-slate-50 rounded-lg p-3 text-sm">
+              <p>Jatuh Tempo: <span id="previewJatuhTempo" class="font-semibold">-</span></p>
+              <p>Total Tagihan: <span id="previewTotal" class="font-semibold">Rp0</span></p>
+            </div>
+            <button type="submit" class="w-full bg-[#235482] text-white font-semibold py-2.5 rounded-lg active:bg-[#1c4468]">Simpan Pinjaman</button>
+          </form>
+        </div>
+
+        <!-- Filter & Cari -->
+        <div class="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 flex flex-col sm:flex-row gap-2 mb-4">
+          <input type="text" id="searchNama" placeholder="Cari nama peminjam..." class="flex-1 px-3 py-2 border rounded-lg">
+          <select id="filterStatus" class="px-3 py-2 border rounded-lg">
+            <option value="">Semua Status</option>
+            <option value="Belum Lunas">Belum Lunas</option>
+            <option value="Lunas">Lunas</option>
+          </select>
+        </div>
+
+        <!-- Tabel Data -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-x-auto">
+          <table class="w-full text-sm min-w-[850px]">
+            <thead class="bg-slate-50 text-slate-500">
+              <tr>
+                <th class="p-3 text-left font-semibold">Nama</th>
+                <th class="p-3 text-left font-semibold">Tgl Pinjam</th>
+                <th class="p-3 text-left font-semibold">Tenor</th>
+                <th class="p-3 text-right font-semibold">Pinjam</th>
+                <th class="p-3 text-right font-semibold">Jasa</th>
+                <th class="p-3 text-right font-semibold">Total</th>
+                <th class="p-3 text-left font-semibold">Jatuh Tempo</th>
+                <th class="p-3 text-left font-semibold">Status</th>
+                <th class="p-3 text-center font-semibold">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+          <p id="emptyState" class="text-center text-slate-400 py-6 hidden">Belum ada data pinjaman.</p>
+        </div>
+      </div>
+
+      <!-- ===== VIEW: SETTINGS ===== -->
+      <div id="viewSettings" class="hidden max-w-md">
+        <h2 class="text-lg font-bold text-slate-700 mb-4">Pengaturan Akun</h2>
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+          <p class="text-sm text-slate-500 mb-3">Masuk sebagai <span id="userEmailLabel2" class="font-semibold text-slate-700">-</span></p>
+          <form id="changePasswordForm" class="space-y-3">
+            <div>
+              <label class="text-sm font-medium">Password Baru</label>
+              <input type="password" id="newPassword" minlength="6" required class="w-full mt-1 px-3 py-2 border rounded-lg">
+            </div>
+            <button type="submit" class="w-full bg-[#235482] text-white font-semibold py-2.5 rounded-lg">Ganti Password</button>
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Modal Pilih Template WA -->
+<div id="waModal" class="hidden fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl p-5 w-full max-w-sm">
+    <h3 class="font-bold text-lg mb-1">Kirim Pengingat WhatsApp</h3>
+    <p id="waTargetNama" class="text-sm text-slate-500 mb-3">-</p>
+    <div class="space-y-2">
+      <button data-template="sopan" class="wa-template-btn w-full text-left bg-blue-50 hover:bg-blue-100 rounded-lg p-3">
+        <span class="font-semibold block">🙏 Sopan</span>
+        <span class="text-xs text-slate-500">Pengingat ramah dan santun</span>
+      </button>
+      <button data-template="tegas" class="wa-template-btn w-full text-left bg-red-50 hover:bg-red-100 rounded-lg p-3">
+        <span class="font-semibold block">⚠️ Tegas</span>
+        <span class="text-xs text-slate-500">Peringatan agar segera membayar</span>
+      </button>
+      <button data-template="marketing" class="wa-template-btn w-full text-left bg-green-50 hover:bg-green-100 rounded-lg p-3">
+        <span class="font-semibold block">🙌 Marketing</span>
+        <span class="text-xs text-slate-500">Ramah promosi, ajakan pinjam lagi</span>
+      </button>
+    </div>
+    <button id="closeWaModalBtn" class="w-full mt-3 text-slate-500 py-2 text-sm">Batal</button>
+  </div>
+</div>
+
+<script>
+// ===================== PENGAMAN: CEK CDN SUDAH BERHASIL DIMUAT =====================
+(function () {
+
+if (typeof supabase === 'undefined' || typeof Chart === 'undefined' || typeof window.jspdf === 'undefined') {
+  document.documentElement.innerHTML =
+    '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;' +
+    'font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;background:#f1f5f9;text-align:center;">' +
+    '<div style="max-width:380px;background:#fff;border-radius:16px;padding:28px 20px;box-shadow:0 4px 16px rgba(0,0,0,.08);">' +
+    '<div style="font-size:40px;margin-bottom:8px;">📡</div>' +
+    '<h2 style="font-size:18px;font-weight:700;color:#1e293b;margin:0 0 8px;">Tidak Bisa Dibuka di Preview Ini</h2>' +
+    '<p style="font-size:14px;color:#64748b;line-height:1.5;margin:0 0 12px;">Halaman ini butuh internet untuk mengambil Tailwind, Supabase, dan Chart.js dari CDN. ' +
+    'Jika Anda membuka file ini lewat jendela preview/pratinjau di dalam aplikasi chat, jendela itu biasanya memblokir semua akses internet keluar sehingga CDN tidak akan pernah bisa dimuat di sana.</p>' +
+    '<p style="font-size:14px;color:#1e293b;font-weight:600;line-height:1.5;margin:0 0 16px;">Buka file ini di tab Chrome/Safari biasa, atau upload ke GitHub Pages lalu kunjungi link-nya.</p>' +
+    '<button onclick="location.reload()" style="background:#235482;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-weight:600;font-size:14px;">Coba Muat Ulang</button>' +
+    '</div></div>'
+  console.error('CDN gagal dimuat (supabase/Chart/jspdf tidak terdeteksi). Kemungkinan besar preview ini memblokir akses internet keluar.')
+  return
+}
+
+// ===================== KONFIGURASI SUPABASE =====================
+const SUPABASE_URL = 'https://oekljkhftgcvuhepmxua.supabase.co'
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9la2xqa2hmdGdjdnVoZXBteHVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg1MzE3NDEsImV4cCI6MjEwNDEwNzc0MX0.5UabBvkHpeTOb756ZQHdyTPd9b_5kz3RusWF-xiSaw0'
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+// ===================== STATE GLOBAL =====================
+let currentUser = null
+let allData = []
+let chartInstance = null
+let overviewChartInstance = null
+let realtimeChannel = null
+let deferredPrompt = null
+let waTargetItem = null
+
+// ===================== HELPER UI =====================
+function showToast(msg, type) {
+  const el = document.getElementById('toast')
+  const bg = type === 'error' ? 'bg-red-600' : 'bg-green-600'
+  el.className = 'fixed top-4 left-1/2 -translate-x-1/2 z-[60] px-4 py-3 rounded-lg shadow-lg text-white text-sm max-w-[90%] text-center ' + bg
+  el.textContent = msg
+  el.classList.remove('hidden')
+  setTimeout(function () { el.classList.add('hidden') }, 3000)
+}
+
+function formatRupiah(angka) {
+  const n = Number(angka || 0)
+  return 'Rp' + n.toLocaleString('id-ID')
+}
+
+function formatTanggal(tgl) {
+  if (!tgl) return '-'
+  const d = new Date(tgl + 'T00:00:00')
+  return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })
+}
+
+function formatNoHp(nohp) {
+  let n = String(nohp || '').replace(/[^0-9]/g, '')
+  if (n.startsWith('0')) n = '62' + n.slice(1)
+  else if (!n.startsWith('62')) n = '62' + n
+  return n
+}
+
+function selisihHari(tglTarget) {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const target = new Date(tglTarget + 'T00:00:00')
+  const diffMs = target.getTime() - today.getTime()
+  return Math.round(diffMs / (1000 * 60 * 60 * 24))
+}
+
+// ===================== NAVIGASI SIDEBAR =====================
+function setActiveView(viewName) {
+  document.getElementById('viewDashboard').classList.add('hidden')
+  document.getElementById('viewData').classList.add('hidden')
+  document.getElementById('viewSettings').classList.add('hidden')
+  document.getElementById('view' + viewName.charAt(0).toUpperCase() + viewName.slice(1)).classList.remove('hidden')
+
+  document.querySelectorAll('.sidebar-link[data-nav]').forEach(function (btn) {
+    btn.classList.toggle('active', btn.getAttribute('data-nav') === viewName)
+  })
+
+  document.getElementById('sidebar').classList.remove('open')
+  document.getElementById('sidebarOverlay').classList.add('hidden')
+
+  if (viewName === 'dashboard') {
+    renderChart()
+    renderOverviewChart()
+  }
+}
+
+document.querySelectorAll('.sidebar-link[data-nav]').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    setActiveView(btn.getAttribute('data-nav'))
+  })
+})
+
+document.getElementById('hamburgerBtn').addEventListener('click', function () {
+  document.getElementById('sidebar').classList.add('open')
+  document.getElementById('sidebarOverlay').classList.remove('hidden')
+})
+document.getElementById('sidebarOverlay').addEventListener('click', function () {
+  document.getElementById('sidebar').classList.remove('open')
+  document.getElementById('sidebarOverlay').classList.add('hidden')
+})
+document.getElementById('settingsBtn').addEventListener('click', function () {
+  setActiveView('settings')
+})
+
+// ===================== AUTH =====================
+async function checkSession() {
+  const sessionResult = await supabaseClient.auth.getSession()
+  const session = sessionResult.data.session
+  if (session && session.user) {
+    currentUser = session.user
+    showAppScreen()
+  } else {
+    showAuthScreen()
+  }
+}
+
+function showAuthScreen() {
+  document.getElementById('authScreen').classList.remove('hidden')
+  document.getElementById('appScreen').classList.add('hidden')
+}
+
+function showAppScreen() {
+  document.getElementById('authScreen').classList.add('hidden')
+  document.getElementById('appScreen').classList.remove('hidden')
+  document.getElementById('userEmailLabel').textContent = currentUser.email
+  document.getElementById('userEmailLabel2').textContent = currentUser.email
+  populateLamaTenor('Harian')
+  document.getElementById('fTglPinjam').value = new Date().toISOString().split('T')[0]
+  setActiveView('dashboard')
+  loadData()
+  setupRealtime()
+}
+
+async function handleLogin(e) {
+  e.preventDefault()
+  const email = document.getElementById('loginEmail').value.trim()
+  const password = document.getElementById('loginPassword').value
+  const result = await supabaseClient.auth.signInWithPassword({ email: email, password: password })
+  if (result.error) {
+    showAuthMsg(result.error.message, true)
+    return
+  }
+  currentUser = result.data.user
+  showAppScreen()
+}
+
+async function handleRegister(e) {
+  e.preventDefault()
+  const email = document.getElementById('regEmail').value.trim()
+  const password = document.getElementById('regPassword').value
+  const result = await supabaseClient.auth.signUp({ email: email, password: password })
+  if (result.error) {
+    showAuthMsg(result.error.message, true)
+    return
+  }
+  showAuthMsg('Pendaftaran berhasil. Silakan cek email untuk verifikasi, lalu masuk.', false)
+  tampilkanHalamanAuth('login')
+}
+
+async function handleChangePassword(e) {
+  e.preventDefault()
+  const newPassword = document.getElementById('newPassword').value
+  const result = await supabaseClient.auth.updateUser({ password: newPassword })
+  if (result.error) {
+    showToast('Gagal ganti password: ' + result.error.message, 'error')
+    return
+  }
+  showToast('Password berhasil diubah', 'ok')
+  document.getElementById('changePasswordForm').reset()
+}
+
+async function handleLogout() {
+  if (realtimeChannel) {
+    supabaseClient.removeChannel(realtimeChannel)
+    realtimeChannel = null
+  }
+  await supabaseClient.auth.signOut()
+  currentUser = null
+  allData = []
+  showAuthScreen()
+}
+
+function showAuthMsg(msg, isError) {
+  const el = document.getElementById('authMsg')
+  el.textContent = msg
+  el.className = 'text-sm text-center mt-3 ' + (isError ? 'text-red-600' : 'text-green-600')
+  el.classList.remove('hidden')
+}
+
+// ===================== TENOR RADIO + SELECT =====================
+function populateLamaTenor(jenis) {
+  const lamaSelect = document.getElementById('fLamaTenor')
+  lamaSelect.innerHTML = ''
+  let start = 1
+  let end = 30
+  if (jenis === 'Mingguan') {
+    start = 4
+    end = 6
+  }
+  for (let i = start; i <= end; i++) {
+    const opt = document.createElement('option')
+    opt.value = String(i)
+    opt.textContent = jenis === 'Mingguan' ? (i + ' Minggu') : (i + ' Hari')
+    lamaSelect.appendChild(opt)
+  }
+}
+
+document.getElementById('radioHarian').addEventListener('change', function () {
+  populateLamaTenor('Harian')
+  updatePreview()
+})
+document.getElementById('radioMingguan').addEventListener('change', function () {
+  populateLamaTenor('Mingguan')
+  updatePreview()
+})
+
+function getJenisTenorTerpilih() {
+  return document.querySelector('input[name="jenisTenor"]:checked').value
+}
+
+// ===================== HITUNG OTOMATIS =====================
+function hitungJatuhTempo(tglPinjam, jenis, lama) {
+  const d = new Date(tglPinjam + 'T00:00:00')
+  if (jenis === 'Harian') {
+    d.setDate(d.getDate() + Number(lama))
+  } else {
+    d.setDate(d.getDate() + Number(lama) * 7)
+  }
+  return d.toISOString().split('T')[0]
+}
+
+function updatePreview() {
+  const tglPinjam = document.getElementById('fTglPinjam').value
+  const jenis = getJenisTenorTerpilih()
+  const lama = document.getElementById('fLamaTenor').value
+  const jumlahPinjam = Number(document.getElementById('fJumlahPinjam').value || 0)
+  const jasa = Number(document.getElementById('fJasa').value || 0)
+  if (tglPinjam && lama) {
+    const jatuhTempo = hitungJatuhTempo(tglPinjam, jenis, lama)
+    document.getElementById('previewJatuhTempo').textContent = formatTanggal(jatuhTempo)
+  }
+  document.getElementById('previewTotal').textContent = formatRupiah(jumlahPinjam + jasa)
+}
+
+// ===================== CRUD =====================
+async function handleAddPinjaman(e) {
+  e.preventDefault()
+  const nama = document.getElementById('fNama').value.trim()
+  const nohp = document.getElementById('fNoHp').value.trim()
+  const tglPinjam = document.getElementById('fTglPinjam').value
+  const jenisTenor = getJenisTenorTerpilih()
+  const lamaTenor = Number(document.getElementById('fLamaTenor').value)
+  const jumlahPinjam = Number(document.getElementById('fJumlahPinjam').value)
+  const jasa = Number(document.getElementById('fJasa').value || 0)
+  const total = jumlahPinjam + jasa
+  const jatuhTempo = hitungJatuhTempo(tglPinjam, jenisTenor, lamaTenor)
+
+  const payload = {
+    user_id: currentUser.id,
+    nama: nama,
+    nohp: nohp,
+    tgl_pinjam: tglPinjam,
+    jenis_tenor: jenisTenor,
+    lama_tenor: lamaTenor,
+    jumlah_pinjam: jumlahPinjam,
+    jasa: jasa,
+    total: total,
+    jatuh_tempo: jatuhTempo,
+    status: 'Belum Lunas'
+  }
+
+  const result = await supabaseClient.from('pinjaman').insert(payload).eq('user_id', currentUser.id)
+  if (result.error) {
+    showToast('Gagal menyimpan: ' + result.error.message, 'error')
+    return
+  }
+  showToast('Pinjaman berhasil disimpan', 'ok')
+  document.getElementById('pinjamanForm').reset()
+  document.getElementById('pinjamanForm').classList.add('hidden')
+  document.getElementById('toggleFormIcon').textContent = '▼'
+  document.getElementById('fTglPinjam').value = new Date().toISOString().split('T')[0]
+  document.getElementById('radioHarian').checked = true
+  populateLamaTenor('Harian')
+  loadData()
+}
+
+async function updateStatus(id, statusBaru) {
+  const result = await supabaseClient.from('pinjaman').update({ status: statusBaru }).eq('id', id).eq('user_id', currentUser.id)
+  if (result.error) {
+    showToast('Gagal update status: ' + result.error.message, 'error')
+    return
+  }
+  showToast('Status diperbarui', 'ok')
+  loadData()
+}
+
+async function deletePinjaman(id) {
+  const konfirmasi = confirm('Yakin ingin menghapus data ini?')
+  if (!konfirmasi) return
+  const result = await supabaseClient.from('pinjaman').delete().eq('id', id).eq('user_id', currentUser.id)
+  if (result.error) {
+    showToast('Gagal menghapus: ' + result.error.message, 'error')
+    return
+  }
+  showToast('Data dihapus', 'ok')
+  loadData()
+}
+
+// ===================== LOAD DATA =====================
+async function loadData() {
+  if (!currentUser) return
+
+  const dataResult = await supabaseClient
+    .from('pinjaman')
+    .select('*')
+    .eq('user_id', currentUser.id)
+    .order('created_at', { ascending: false })
+
+  if (dataResult.error) {
+    showToast('Gagal memuat data: ' + dataResult.error.message, 'error')
+    return
+  }
+  allData = dataResult.data || []
+
+  applyFilter()
+  loadDashboardStats()
+  cekNotifikasi()
+
+  if (!document.getElementById('viewDashboard').classList.contains('hidden')) {
+    renderChart()
+    renderOverviewChart()
+  }
+}
+
+function applyFilter() {
+  const cari = document.getElementById('searchNama').value.trim().toLowerCase()
+  const statusFilter = document.getElementById('filterStatus').value
+  let hasil = allData
+  if (cari) {
+    hasil = hasil.filter(function (item) {
+      return item.nama.toLowerCase().indexOf(cari) !== -1
+    })
+  }
+  if (statusFilter) {
+    hasil = hasil.filter(function (item) { return item.status === statusFilter })
+  }
+  renderTable(hasil)
+}
+
+let lastStats = { total_dana_keluar: 0, piutang_aktif: 0, total_jasa: 0, jumlah_telat: 0 }
+
+async function loadDashboardStats() {
+  const rpcResult = await supabaseClient.rpc('get_dashboard_stats', { uid: currentUser.id })
+  if (rpcResult.error) {
+    showToast('Gagal memuat statistik: ' + rpcResult.error.message, 'error')
+    return
+  }
+  const stats = (rpcResult.data && rpcResult.data[0]) || {
+    total_dana_keluar: 0, piutang_aktif: 0, total_jasa: 0, jumlah_telat: 0
+  }
+  lastStats = stats
+  document.getElementById('cardDanaKeluar').textContent = formatRupiah(stats.total_dana_keluar)
+  document.getElementById('cardPiutang').textContent = formatRupiah(stats.piutang_aktif)
+  document.getElementById('cardJasa').textContent = formatRupiah(stats.total_jasa)
+  document.getElementById('cardTelat').textContent = stats.jumlah_telat
+  document.getElementById('cardTotalPerputaran').textContent = formatRupiah(Number(stats.total_dana_keluar) + Number(stats.total_jasa))
+  renderOverviewChart()
+}
+
+// ===================== RENDER TABEL =====================
+function renderTable(data) {
+  const tbody = document.getElementById('tableBody')
+  const emptyState = document.getElementById('emptyState')
+  tbody.innerHTML = ''
+
+  if (!data || data.length === 0) {
+    emptyState.classList.remove('hidden')
+    return
+  }
+  emptyState.classList.add('hidden')
+
+  data.forEach(function (item) {
+    const diff = selisihHari(item.jatuh_tempo)
+    let rowClass = ''
+    if (item.status === 'Lunas') {
+      rowClass = 'status-lunas'
+    } else if (diff < 0) {
+      rowClass = 'status-telat'
+    } else if (diff >= 0 && diff <= 3) {
+      rowClass = 'status-segera'
+    }
+
+    const tr = document.createElement('tr')
+    tr.className = rowClass + ' border-b border-slate-100 last:border-0'
+    tr.innerHTML =
+      '<td class="p-3 font-medium">' + escapeHtml(item.nama) + '<br><span class="text-xs text-slate-500">' + escapeHtml(item.nohp || '') + '</span></td>' +
+      '<td class="p-3">' + formatTanggal(item.tgl_pinjam) + '</td>' +
+      '<td class="p-3">' + item.lama_tenor + ' ' + item.jenis_tenor + '</td>' +
+      '<td class="p-3 text-right">' + formatRupiah(item.jumlah_pinjam) + '</td>' +
+      '<td class="p-3 text-right">' + formatRupiah(item.jasa) + '</td>' +
+      '<td class="p-3 text-right font-semibold">' + formatRupiah(item.total) + '</td>' +
+      '<td class="p-3">' + formatTanggal(item.jatuh_tempo) + '</td>' +
+      '<td class="p-3">' +
+        '<select data-action="status" data-id="' + item.id + '" class="text-xs border rounded px-1 py-1">' +
+          '<option value="Belum Lunas"' + (item.status === 'Belum Lunas' ? ' selected' : '') + '>Belum Lunas</option>' +
+          '<option value="Lunas"' + (item.status === 'Lunas' ? ' selected' : '') + '>Lunas</option>' +
+        '</select>' +
+      '</td>' +
+      '<td class="p-3 text-center whitespace-nowrap">' +
+        '<button data-action="wa" data-id="' + item.id + '" class="text-green-600 px-1" title="Kirim WA">💬</button>' +
+        '<button data-action="delete" data-id="' + item.id + '" class="text-red-600 px-1" title="Hapus">🗑️</button>' +
+      '</td>'
+    tbody.appendChild(tr)
+  })
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div')
+  div.textContent = str
+  return div.innerHTML
+}
+
+// Delegasi event pada tabel
+document.getElementById('tableBody').addEventListener('change', function (e) {
+  const target = e.target.closest('select[data-action="status"]')
+  if (!target) return
+  updateStatus(target.getAttribute('data-id'), target.value)
+})
+
+document.getElementById('tableBody').addEventListener('click', function (e) {
+  const waBtn = e.target.closest('button[data-action="wa"]')
+  const delBtn = e.target.closest('button[data-action="delete"]')
+  if (waBtn) {
+    const item = allData.find(function (d) { return d.id === waBtn.getAttribute('data-id') })
+    if (item) bukaWaModal(item)
+  }
+  if (delBtn) {
+    deletePinjaman(delBtn.getAttribute('data-id'))
+  }
+})
+
+// ===================== TOMBOL WA (3 TEMPLATE) =====================
+function bukaWaModal(item) {
+  waTargetItem = item
+  document.getElementById('waTargetNama').textContent = item.nama + ' - ' + item.nohp
+  document.getElementById('waModal').classList.remove('hidden')
+}
+
+function buatPesanWA(item, template) {
+  const satuan = item.jenis_tenor === 'Harian' ? 'hari' : 'minggu'
+  const tenorText = item.lama_tenor + ' ' + satuan
+  const tanggal = formatTanggal(item.jatuh_tempo)
+  const total = formatRupiah(item.total)
+
+  if (template === 'sopan') {
+    return 'Halo ' + item.nama + ', mohon maaf mengingatkan untuk pembayaran pinjaman di Koperasi Harian. Tenor ' + item.jenis_tenor + ' ' + tenorText + '. Jatuh tempo ' + tanggal + '. Total tagihan ' + total + '. Mohon konfirmasinya ya, terima kasih 🙏'
+  }
+  if (template === 'tegas') {
+    return 'Halo ' + item.nama + ', ini pengingat PENTING dari Koperasi Harian. Tagihan Anda sebesar ' + total + ' dengan tenor ' + item.jenis_tenor + ' ' + tenorText + ' jatuh tempo pada ' + tanggal + '. Mohon segera dilunasi agar tidak dikenakan denda keterlambatan. Terima kasih atas perhatiannya.'
+  }
+  return 'Halo ' + item.nama + ' 👋, terima kasih sudah menjadi anggota Koperasi Harian! Tagihan ' + total + ' (tenor ' + item.jenis_tenor + ' ' + tenorText + ') jatuh tempo ' + tanggal + '. Yuk bayar tepat waktu, agar pengajuan pinjaman berikutnya bisa lebih cepat diproses! 🙌'
+}
+
+function kirimWA(item, template) {
+  const pesan = buatPesanWA(item, template)
+  const nohp = formatNoHp(item.nohp)
+  const url = 'https://wa.me/' + nohp + '?text=' + encodeURIComponent(pesan)
+  window.open(url, '_blank')
+}
+
+document.querySelectorAll('.wa-template-btn').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    if (!waTargetItem) return
+    kirimWA(waTargetItem, btn.getAttribute('data-template'))
+    document.getElementById('waModal').classList.add('hidden')
+    waTargetItem = null
+  })
+})
+document.getElementById('closeWaModalBtn').addEventListener('click', function () {
+  document.getElementById('waModal').classList.add('hidden')
+  waTargetItem = null
+})
+
+// ===================== NOTIFIKASI H-3 =====================
+function cekNotifikasi() {
+  const jatuhTempoDekat = allData.filter(function (item) {
+    const diff = selisihHari(item.jatuh_tempo)
+    return item.status === 'Belum Lunas' && diff <= 3
+  })
+
+  const notifBox = document.getElementById('notifBox')
+  if (jatuhTempoDekat.length === 0) {
+    notifBox.classList.add('hidden')
+    notifBox.innerHTML = ''
+    return
+  }
+
+  let listHtml = '<p class="font-semibold mb-2">⚠️ ' + jatuhTempoDekat.length + ' Peminjam jatuh tempo dalam 3 hari atau kurang:</p><div class="space-y-2">'
+  jatuhTempoDekat.forEach(function (item) {
+    listHtml += '<div class="flex items-center justify-between bg-white rounded-lg px-2 py-1.5">' +
+      '<span>' + escapeHtml(item.nama) + ' - ' + formatRupiah(item.total) + '</span>' +
+      '<button data-notif-wa="' + item.id + '" class="bg-green-600 text-white text-xs px-2 py-1 rounded">Kirim WA</button>' +
+      '</div>'
+  })
+  listHtml += '</div>'
+  notifBox.innerHTML = listHtml
+  notifBox.classList.remove('hidden')
+
+  notifBox.querySelectorAll('button[data-notif-wa]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      const item = allData.find(function (d) { return d.id === btn.getAttribute('data-notif-wa') })
+      if (item) bukaWaModal(item)
+    })
+  })
+
+  if (jatuhTempoDekat.length > 0 && !window._sudahAlertNotif) {
+    window._sudahAlertNotif = true
+    alert('Ada ' + jatuhTempoDekat.length + ' peminjam yang jatuh tempo dalam 3 hari atau kurang. Silakan cek kotak pengingat.')
+  }
+}
+
+// ===================== GRAFIK JASA PER BULAN =====================
+function renderChart() {
+  const canvas = document.getElementById('jasaChart')
+  if (!canvas) return
+  const lunas = allData.filter(function (item) { return item.status === 'Lunas' })
+  const perBulan = {}
+  lunas.forEach(function (item) {
+    const d = new Date(item.tgl_pinjam + 'T00:00:00')
+    const key = d.toLocaleDateString('id-ID', { month: 'short', year: '2-digit' })
+    perBulan[key] = (perBulan[key] || 0) + Number(item.jasa)
+  })
+  const labels = Object.keys(perBulan)
+  const values = labels.map(function (k) { return perBulan[k] })
+
+  const ctx = canvas.getContext('2d')
+  if (chartInstance) {
+    chartInstance.destroy()
+  }
+  chartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels.length ? labels : ['Belum ada data'],
+      datasets: [{
+        label: 'Jasa (Rp)',
+        data: values.length ? values : [0],
+        backgroundColor: '#235482',
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true } }
+    }
+  })
+}
+
+// ===================== GRAFIK RINGKASAN DANA (DONUT) =====================
+function renderOverviewChart() {
+  const canvas = document.getElementById('overviewChart')
+  if (!canvas) return
+
+  const danaKeluar = Number(lastStats.total_dana_keluar) || 0
+  const piutang = Number(lastStats.piutang_aktif) || 0
+  const jasa = Number(lastStats.total_jasa) || 0
+  const total = danaKeluar + piutang + jasa
+
+  const values = total > 0 ? [danaKeluar, piutang, jasa] : [1, 1, 1]
+  const colors = ['#10b981', '#0ea5e9', '#f59e0b']
+  const labelsInfo = [
+    { name: 'Dana Keluar', value: danaKeluar },
+    { name: 'Piutang Aktif', value: piutang },
+    { name: 'Jasa Terkumpul', value: jasa }
+  ]
+
+  const ctx = canvas.getContext('2d')
+  if (overviewChartInstance) {
+    overviewChartInstance.destroy()
+  }
+  overviewChartInstance = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: labelsInfo.map(function (l) { return l.name }),
+      datasets: [{ data: values, backgroundColor: colors, borderWidth: 0 }]
+    },
+    options: {
+      responsive: false,
+      cutout: '68%',
+      plugins: { legend: { display: false }, tooltip: { enabled: total > 0 } }
+    }
+  })
+
+  const legend = document.getElementById('overviewLegend')
+  legend.innerHTML = labelsInfo.map(function (l, i) {
+    const pct = total > 0 ? Math.round((l.value / total) * 100) : 0
+    return '<div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full inline-block" style="background:' + colors[i] + '"></span>' + pct + '% ' + l.name + '</div>'
+  }).join('')
+}
+
+// ===================== EXPORT PDF =====================
+function exportPDF() {
+  const jsPDFCtor = window.jspdf.jsPDF
+  const doc = new jsPDFCtor({ orientation: 'landscape' })
+  doc.setFontSize(14)
+  doc.text('Laporan Koperasi Harian', 14, 12)
+  doc.setFontSize(9)
+  doc.text('Tanggal cetak: ' + new Date().toLocaleDateString('id-ID'), 14, 18)
+
+  const headers = ['Nama', 'No HP', 'Tgl Pinjam', 'Tenor', 'Pinjam', 'Jasa', 'Total', 'Jatuh Tempo', 'Status']
+  const colWidths = [40, 28, 24, 22, 26, 22, 26, 26, 22]
+  let y = 26
+  let x = 14
+
+  doc.setFontSize(8)
+  doc.setFont(undefined, 'bold')
+  headers.forEach(function (h, i) {
+    doc.text(h, x, y)
+    x += colWidths[i]
+  })
+  doc.setFont(undefined, 'normal')
+  y += 5
+  doc.line(14, y - 3, 280, y - 3)
+
+  const maxRows = 28
+  const rows = allData.slice(0, maxRows)
+  rows.forEach(function (item) {
+    x = 14
+    const cells = [
+      String(item.nama).slice(0, 20),
+      formatNoHp(item.nohp),
+      formatTanggal(item.tgl_pinjam),
+      item.lama_tenor + ' ' + item.jenis_tenor,
+      formatRupiah(item.jumlah_pinjam),
+      formatRupiah(item.jasa),
+      formatRupiah(item.total),
+      formatTanggal(item.jatuh_tempo),
+      item.status
+    ]
+    cells.forEach(function (c, i) {
+      doc.text(String(c), x, y)
+      x += colWidths[i]
+    })
+    y += 5
+  })
+
+  if (allData.length > maxRows) {
+    doc.setFontSize(7)
+    doc.text('... dan ' + (allData.length - maxRows) + ' data lainnya (tidak muat di 1 halaman)', 14, y + 3)
+  }
+
+  doc.save('laporan-koperasi-harian.pdf')
+}
+
+// ===================== REALTIME =====================
+function setupRealtime() {
+  if (realtimeChannel) {
+    supabaseClient.removeChannel(realtimeChannel)
+  }
+  realtimeChannel = supabaseClient
+    .channel('pinjaman-changes-' + currentUser.id)
+    .on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table: 'pinjaman',
+      filter: 'user_id=eq.' + currentUser.id
+    }, function () {
+      loadData()
+    })
+    .subscribe()
+}
+
+// ===================== PWA: SERVICE WORKER (file eksternal) =====================
+function registerServiceWorker() {
+  if (!('serviceWorker' in navigator)) return
+  navigator.serviceWorker.register('sw.js').catch(function (err) {
+    console.log('SW gagal:', err)
+  })
+}
+
+// ===================== PWA: TOMBOL INSTALL =====================
+window.addEventListener('beforeinstallprompt', function (e) {
+  e.preventDefault()
+  deferredPrompt = e
+  document.getElementById('installBtn').classList.remove('hidden')
+})
+
+document.getElementById('installBtn').addEventListener('click', async function () {
+  if (!deferredPrompt) return
+  deferredPrompt.prompt()
+  await deferredPrompt.userChoice
+  deferredPrompt = null
+  document.getElementById('installBtn').classList.add('hidden')
+})
+
+// ===================== EVENT LISTENERS UMUM =====================
+function tampilkanHalamanAuth(halaman) {
+  const isLogin = halaman === 'login'
+  document.getElementById('pageLogin').classList.toggle('hidden', !isLogin)
+  document.getElementById('pageRegister').classList.toggle('hidden', isLogin)
+  document.getElementById('authMsg').classList.add('hidden')
+}
+
+document.getElementById('goToRegisterBtn').addEventListener('click', function () {
+  tampilkanHalamanAuth('register')
+})
+document.getElementById('goToLoginBtn').addEventListener('click', function () {
+  tampilkanHalamanAuth('login')
+})
+
+document.getElementById('loginForm').addEventListener('submit', handleLogin)
+document.getElementById('registerForm').addEventListener('submit', handleRegister)
+document.getElementById('changePasswordForm').addEventListener('submit', handleChangePassword)
+document.getElementById('logoutBtn').addEventListener('click', handleLogout)
+document.getElementById('pinjamanForm').addEventListener('submit', handleAddPinjaman)
+
+document.getElementById('toggleFormBtn').addEventListener('click', function () {
+  const form = document.getElementById('pinjamanForm')
+  const icon = document.getElementById('toggleFormIcon')
+  form.classList.toggle('hidden')
+  icon.textContent = form.classList.contains('hidden') ? '▼' : '▲'
+})
+
+document.getElementById('searchNama').addEventListener('input', applyFilter)
+document.getElementById('filterStatus').addEventListener('change', applyFilter)
+document.getElementById('exportPdfBtn').addEventListener('click', exportPDF)
+
+;['fTglPinjam', 'fLamaTenor', 'fJumlahPinjam', 'fJasa'].forEach(function (id) {
+  document.getElementById(id).addEventListener('input', updatePreview)
+  document.getElementById(id).addEventListener('change', updatePreview)
+})
+
+// ===================== INIT =====================
+registerServiceWorker()
+checkSession()
+
+})()
+</script>
+</body>
+</html>
