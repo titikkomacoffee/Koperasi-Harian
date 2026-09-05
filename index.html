@@ -4,14 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Koperasi Harian</title>
-<link rel="icon" href="icon.png">
 <style>
 :root{--blue:#1e4d8b;--green:#22c55e;--orange:#f97316;--red:#ef4444;--wa:#25D366;--bg:#f5f7fa;--kuning:#ffc107}
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif}
 body{display:flex;background:var(--bg)}
 .sidebar{width:250px;background:white;height:100vh;padding:15px;box-shadow:2px 0 10px rgba(0,0,0,0.05);position:fixed;left:0;top:0;z-index:100}
 .sidebar.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px;margin-bottom:25px;color:var(--blue);padding-bottom:15px;border-bottom:1px solid #eee}
-.sidebar.logo img{width:35px;height:35px;object-fit:contain}
+/* INI LOGO BUATAN DARI CSS */
+.logo-icon{width:35px;height:35px;border-radius:50%;background:conic-gradient(var(--kuning) 0deg 180deg, var(--blue) 180deg 360deg);position:relative;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo-icon::before{content:'KH';position:absolute;color:white;font-weight:900;font-size:14px;font-family:Arial}
 .sidebar a{display:flex;align-items:center;gap:10px;padding:12px;border-radius:10px;text-decoration:none;color:#555;margin-bottom:5px;font-weight:500;cursor:pointer}
 .sidebar a.active{background:var(--blue);color:white}
 .main{flex:1;margin-left:250px;padding:20px}
@@ -46,7 +47,7 @@ button:hover{opacity:0.9}
 
 <div class="sidebar" id="sidebar">
   <div class="logo">
-    <img src="icon.png" alt="Logo">
+    <div class="logo-icon"></div> <!-- INI LOGONYA DARI CSS -->
     <span>Koperasi Harian</span>
   </div>
   <a onclick="showPage('dashboard')" class="active">📊 Dashboard</a>
@@ -60,7 +61,6 @@ button:hover{opacity:0.9}
   <div class="topbar">
     <span class="menu-btn" onclick="sidebar.classList.toggle('show')">☰</span>
     <h2 id="judulHalaman">Dashboard</h2>
-    <div><img src="https://i.pravatar.cc/40" style="border-radius:50%"> Administrator</div>
   </div>
 
   <div id="dashboard" class="page active">
@@ -155,7 +155,7 @@ function simpanSimpanan(){
 
 function gantiJenis(){
   lama.innerHTML = jenis.value==='Harian'
- ? '<option value="24">24 Hari</option><option value="30">30 Hari</option>'
+? '<option value="24">24 Hari</option><option value="30">30 Hari</option>'
   : '<option value="4">4 Minggu</option><option value="5">5 Minggu</option><option value="6">6 Minggu</option>';
 }
 
@@ -228,4 +228,4 @@ function tampilSemua(){
 tampilSemua();
 </script>
 </body>
-    </html>
+</html>
