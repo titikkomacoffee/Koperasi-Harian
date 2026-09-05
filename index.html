@@ -3,128 +3,110 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard Koperasi</title>
+<title>Koperasi Harian</title>
+<link rel="icon" type="image/png" href="logo.png"> <!-- INI LOGO DI TAB -->
 <style>
-:root{--blue:#3b82f6;--green:#22c55e;--orange:#f97316;--red:#ef4444;--bg:#f5f7fa}
+:root{--blue:#1e4d8b;--green:#22c55e;--orange:#f97316;--red:#ef4444;--wa:#25D366;--bg:#f5f7fa;--kuning:#ffc107}
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif}
 body{display:flex;background:var(--bg)}
-
-/* SIDEBAR */
-.sidebar{width:250px;background:white;height:100vh;padding:15px;box-shadow:2px 0 10px rgba(0,0,0,0.05);transition:0.3s;position:fixed;left:0;top:0;z-index:100}
-.sidebar.logo{display:flex;align-items:center;gap:10px;font-weight:bold;font-size:20px;margin-bottom:25px}
-.sidebar a{display:flex;align-items:center;gap:10px;padding:12px;border-radius:10px;text-decoration:none;color:#666;margin-bottom:5px;font-weight:500}
+.sidebar{width:250px;background:white;height:100vh;padding:15px;box-shadow:2px 0 10px rgba(0,0,0,0.05);position:fixed;left:0;top:0;z-index:100;transition:0.3s}
+.sidebar.logo{display:flex;align-items:center;gap:10px;font-weight:bold;font-size:18px;margin-bottom:25px;color:var(--blue)}
+.sidebar.logo img{width:40px;height:40px;border-radius:50%}
+.sidebar a{display:flex;align-items:center;gap:10px;padding:12px;border-radius:10px;text-decoration:none;color:#666;margin-bottom:5px;font-weight:500;cursor:pointer}
 .sidebar a.active{background:var(--blue);color:white}
-.sidebar a:hover{background:#eee}
-
-/* MAIN */
 .main{flex:1;margin-left:250px;padding:20px;transition:0.3s}
 .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
-.topbar.user{display:flex;align-items:center;gap:10px;font-weight:bold}
 .topbar.menu-btn{display:none;font-size:24px;cursor:pointer}
-
-/* CARDS */
 .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:20px}
 .card{padding:20px;border-radius:15px;color:white;display:flex;justify-content:space-between;align-items:center}
 .card h2{font-size:32px}
-.card p{font-size:14px;opacity:0.9}
-.card.blue{background:linear-gradient(135deg,#38bdf8,#0ea5e9)}
+.card.blue{background:linear-gradient(135deg,#38bdf8,var(--blue))}
 .card.green{background:linear-gradient(135deg,#4ade80,#22c55e)}
-.card.orange{background:linear-gradient(135deg,#fb923c,#f97316)}
-.card.red{background:linear-gradient(135deg,#f87171,#ef4444)}
-
-/* TOTAL DANA + OVERVIEW */
+.card.orange{background:linear-gradient(135deg,#fb923c,var(--kuning))}
+.card.red{background:linear-gradient(135deg,#f87171,var(--red))}
 .row{display:grid;grid-template-columns:2fr 1fr;gap:15px;margin-bottom:20px}
-.total{background:linear-gradient(135deg,#38bdf8,#0ea5e9);color:white;padding:30px;border-radius:15px;display:flex;justify-content:space-between;align-items:center}
+.total{background:linear-gradient(135deg,#38bdf8,var(--blue));color:white;padding:30px;border-radius:15px;display:flex;justify-content:space-between;align-items:center}
 .total h1{font-size:36px}
 .overview{background:white;padding:20px;border-radius:15px}
-.overview h3{margin-bottom:15px}
-.overview.item{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:14px}
-.dot{width:10px;height:10px;border-radius:50%}
-
-/* FORM */
 .form-card{background:white;padding:20px;border-radius:15px;margin-bottom:20px}
 input,select,button{width:100%;padding:12px;margin-top:10px;border:1px solid #ddd;border-radius:8px}
 button{background:var(--green);color:white;border:none;font-weight:bold;cursor:pointer}
-.list-item{background:white;padding:12px;border-radius:10px;margin-bottom:8px}
+button:hover{opacity:0.9}
+.btn-wa{background:var(--wa);width:auto;padding:6px 12px;font-size:12px}
+.btn-lunas{background:#6b7280;width:auto;padding:6px 12px;font-size:12px}
+.list-item{background:white;padding:15px;border-radius:10px;margin-bottom:10px}
+.jadwal{margin-left:15px;font-size:13px;background:#f9f9f9;padding:8px;border-radius:6px;margin-top:5px;display:flex;justify-content:space-between;align-items:center;gap:5px}
+.telat{color:red;font-weight:bold}
 .page{display:none}.page.active{display:block}
-
-/* RESPONSIVE UNTUK HP */
-@media(max-width:1024px){
- .cards{grid-template-columns:repeat(2,1fr)}
- .row{grid-template-columns:1fr}
-}
-@media(max-width:768px){
- .sidebar{left:-250px}
- .sidebar.show{left:0}
- .main{margin-left:0}
- .topbar.menu-btn{display:block}
- .cards{grid-template-columns:1fr}
-}
+@media(max-width:1024px){.cards{grid-template-columns:repeat(2,1fr)}.row{grid-template-columns:1fr}}
+@media(max-width:768px){.sidebar{left:-250px}.sidebar.show{left:0}.main{margin-left:0}.topbar.menu-btn{display:block}.cards{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 
 <div class="sidebar" id="sidebar">
-<div class="logo">📊 <span>Koperasi</span></div>
+<div class="logo">
+  <img src="logo.png" alt="Logo"> <!-- INI LOGO DI SIDEBAR -->
+  <span>Koperasi Harian</span>
+</div>
 <a onclick="showPage('dashboard')" class="active">📊 Dashboard</a>
 <a onclick="showPage('nasabah')">👥 Anggota</a>
-<a onclick="showPage('pegawai')">👨‍💼 Pegawai</a>
 <a onclick="showPage('simpanan')">💰 Simpanan</a>
 <a onclick="showPage('pinjaman')">📄 Pinjaman</a>
 <a onclick="showPage('angsuran')">📝 Angsuran</a>
-<a>⚙️ Users</a>
-<a>📞 Contact</a>
 </div>
 
 <div class="main">
 <div class="topbar">
-<span class="menu-btn" onclick="document.getElementById('sidebar').classList.toggle('show')">☰</span>
-<h2>Dashboard</h2>
-<div class="user"><img src="https://i.pravatar.cc/40" style="border-radius:50%"> Administrator</div>
+<span class="menu-btn" onclick="sidebar.classList.toggle('show')">☰</span>
+<h2 id="judulHalaman">Dashboard</h2>
+<div><img src="https://i.pravatar.cc/40" style="border-radius:50%"> Administrator</div>
 </div>
 
 <!-- DASHBOARD -->
 <div id="dashboard" class="page active">
 <div class="cards">
-<div class="card blue"><div><h2 id="simpWajib">28</h2><p>Simpanan Wajib</p></div><span style="font-size:30px">🔖</span></div>
-<div class="card green"><div><h2 id="simpPokok">29</h2><p>Simpanan Pokok</p></div><span style="font-size:30px">📅</span></div>
-<div class="card orange"><div><h2 id="simpSuka">0</h2><p>Simpanan Sukarela</p></div><span style="font-size:30px">➡️</span></div>
-<div class="card red"><div><h2 id="totalPinjam">0</h2><p>Pinjaman</p></div><span style="font-size:30px">⬅️</span></div>
+<div class="card blue"><div><h2 id="jmlNasabah">0</h2><p>Anggota</p></div><span>👥</span></div>
+<div class="card green"><div><h2 id="jmlSimpanan">0</h2><p>Simpanan</p></div><span>💰</span></div>
+<div class="card orange"><div><h2 id="jmlAngsuran">0</h2><p>Angsuran Masuk</p></div><span>📝</span></div>
+<div class="card red"><div><h2 id="totalPinjam">0</h2><p>Pinjaman Aktif</p></div><span>📄</span></div>
 </div>
-
 <div class="row">
-<div class="total">
-<div><h1>Rp. <span id="totalDana">0</span></h1><p>Total Dana</p></div>
-<span style="font-size:40px">📅</span>
-</div>
-<div class="overview">
-<h3>Card's Overview</h3>
-<div class="item"><div class="dot" style="background:var(--blue)"></div>40% Simpanan Wajib</div>
-<div class="item"><div class="dot" style="background:var(--green)"></div>35% Simpanan Pokok</div>
-<div class="item"><div class="dot" style="background:var(--orange)"></div>25% Simpanan Sukarela</div>
-<div class="item"><div class="dot" style="background:var(--red)"></div>15% Pinjaman</div>
-</div>
+<div class="total"><div><h1>Rp. <span id="totalDana">0</span></h1><p>Total Dana Pinjaman</p></div><span>📅</span></div>
+<div class="overview"><h3>Ringkasan</h3><p>Total Anggota: <b id="totalAnggota">0</b></p><p>Total Pinjaman: <b id="totalPinjamanRp">Rp 0</b></p></div>
 </div>
 </div>
 
-<!-- NASABAH -->
+<!-- ANGGOTA -->
 <div id="nasabah" class="page">
-<h2>Data Nasabah</h2>
+<h2>Data Anggota</h2>
 <div class="form-card">
-<h3>Form Nasabah Baru</h3>
+<h3>Form Anggota Baru</h3>
 <input id="namaNasabah" placeholder="Nama Lengkap">
 <input id="nohpNasabah" placeholder="No HP 6281...">
 <input id="alamatNasabah" placeholder="Alamat">
-<button onclick="simpanNasabah()">Simpan Nasabah</button>
+<button onclick="simpanNasabah()">Simpan Anggota</button>
 </div>
 <div id="listNasabah"></div>
+</div>
+
+<!-- SIMPANAN -->
+<div id="simpanan" class="page">
+<h2>Data Simpanan</h2>
+<div class="form-card">
+<h3>Tambah Simpanan</h3>
+<select id="pilihNasabahSimpanan"></select>
+<input id="jumlahSimpanan" type="number" placeholder="Jumlah Simpanan">
+<button onclick="simpanSimpanan()">Simpan Simpanan</button>
+</div>
+<div id="listSimpanan"></div>
 </div>
 
 <!-- PINJAMAN -->
 <div id="pinjaman" class="page">
 <h2>Form Peminjam Baru</h2>
 <div class="form-card">
-<select id="pilihNasabah"></select>
+<select id="pilihNasabahPinjam"></select>
 <input id="tgl" type="date">
 <select id="jenis" onchange="gantiJenis()"><option>Harian</option><option>Mingguan</option></select>
 <select id="lama"><option value="24">24 Hari</option><option value="30">30 Hari</option><option value="4">4 Minggu</option><option value="5">5 Minggu</option><option value="6">6 Minggu</option></select>
@@ -135,39 +117,55 @@ button{background:var(--green);color:white;border:none;font-weight:bold;cursor:p
 <div id="listPinjaman"></div>
 </div>
 
+<!-- ANGSURAN -->
+<div id="angsuran" class="page">
+<h2>Data Angsuran</h2>
+<div id="listAngsuran"></div>
+</div>
+
 </div>
 
 <script>
 let nasabah = JSON.parse(localStorage.getItem('nasabah')) || [];
 let pinjaman = JSON.parse(localStorage.getItem('pinjaman')) || [];
-document.getElementById('tgl').valueAsDate = new Date();
+let simpanan = JSON.parse(localStorage.getItem('simpanan')) || [];
+tgl.valueAsDate = new Date();
 
 function showPage(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.sidebar a').forEach(a=>a.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   event.target.classList.add('active');
-  document.getElementById('sidebar').classList.remove('show');
-  tampilNasabah(); tampilPinjaman(); updateDashboard();
+  sidebar.classList.remove('show');
+  judulHalaman.innerText = event.target.innerText.trim();
+  tampilSemua();
 }
 
 function simpanNasabah(){
+  if(!namaNasabah.value) return alert('Nama wajib diisi');
   nasabah.push({nama:namaNasabah.value,nohp:nohpNasabah.value,alamat:alamatNasabah.value});
   localStorage.setItem('nasabah',JSON.stringify(nasabah));
   namaNasabah.value=nohpNasabah.value=alamatNasabah.value='';
-  tampilNasabah(); updateDashboard();
+  tampilSemua();
 }
-function tampilNasabah(){
-  listNasabah.innerHTML = '<h3>Daftar Nasabah</h3>' + nasabah.map(n=>`<div class="list-item"><b>${n.nama}</b><br>${n.nohp}<br>${n.alamat}</div>`).join('');
-  pilihNasabah.innerHTML = '<option>-- Pilih Nasabah --</option>' + nasabah.map((n,i)=>`<option value="${i}">${n.nama} - ${n.nohp}</option>`).join('');
+
+function simpanSimpanan(){
+  let idx = pilihNasabahSimpanan.value;
+  if(idx=='') return alert('Pilih anggota');
+  simpanan.push({nama:nasabah[idx].nama,jumlah:+jumlahSimpanan.value,tgl:new Date().toISOString().split('T')[0]});
+  localStorage.setItem('simpanan',JSON.stringify(simpanan));
+  jumlahSimpanan.value='';
+  tampilSemua();
 }
+
 function gantiJenis(){
   lama.innerHTML = jenis.value=='Harian' 
- ? '<option value="24">24 Hari</option><option value="30">30 Hari</option>'
+? '<option value="24">24 Hari</option><option value="30">30 Hari</option>'
   : '<option value="4">4 Minggu</option><option value="5">5 Minggu</option><option value="6">6 Minggu</option>';
 }
+
 function simpanPinjaman(){
-  let idx = pilihNasabah.value; if(idx=='-- Pilih Nasabah --') return alert('Pilih nasabah dulu');
+  let idx = pilihNasabahPinjam.value; if(idx=='') return alert('Pilih anggota dulu');
   let n = nasabah[idx]; let jumlah=+jumlah.value; let jasa=+jasa.value; let lama=+lama.value;
   let total = jumlah + jasa; let cicilan = Math.round(total / lama);
   let jadwal = []; let tglAwal = new Date(tgl.value);
@@ -178,21 +176,60 @@ function simpanPinjaman(){
   }
   pinjaman.push({...n, jenis:jenis.value,jumlah,jasa,total,lama,cicilan,jadwal});
   localStorage.setItem('pinjaman',JSON.stringify(pinjaman));
-  tampilPinjaman(); updateDashboard();
+  tampilSemua();
 }
-function tampilPinjaman(){
-  listPinjaman.innerHTML = '<h3>Daftar Pinjaman</h3>' + pinjaman.map(d=>`
+
+function kirimWA(nohp,nama,tgl,bayar){
+  let pesan = `Assalamualaikum Yth. ${nama}\n\nPengingat Angsuran Koperasi Harian\nTanggal Jatuh Tempo: ${tgl}\nJumlah Tagihan: Rp${bayar.toLocaleString('id-ID')}\n\nMohon segera melakukan pembayaran. Terima kasih.`;
+  window.open(`https://wa.me/${nohp}?text=${encodeURIComponent(pesan)}`);
+}
+
+function bayarAngsuran(pIdx, jIdx){
+  pinjaman[pIdx].jadwal[jIdx].status = 'Lunas';
+  localStorage.setItem('pinjaman',JSON.stringify(pinjaman));
+  tampilSemua();
+}
+
+function tampilSemua(){
+  listNasabah.innerHTML = '<h3>Daftar Anggota</h3>' + nasabah.map(n=>`<div class="list-item"><b>${n.nama}</b><br>${n.nohp}<br>${n.alamat}</div>`).join('');
+  let opt = '<option value="">-- Pilih Anggota --</option>';
+  nasabah.forEach((n,i)=> opt += `<option value="${i}">${n.nama} - ${n.nohp}</option>`);
+  pilihNasabahSimpanan.innerHTML = opt;
+  pilihNasabahPinjam.innerHTML = opt;
+
+  listSimpanan.innerHTML = '<h3>Riwayat Simpanan</h3>' + simpanan.map(s=>`<div class="list-item">${s.tgl} - <b>${s.nama}</b> - Rp${s.jumlah.toLocaleString('id-ID')}</div>`).join('');
+
+  listPinjaman.innerHTML = '<h3>Daftar Pinjaman</h3>' + pinjaman.map((d,pIdx)=>`
   <div class="list-item"><b>${d.nama}</b> - ${d.jenis} ${d.lama}x - Cicilan: Rp${d.cicilan.toLocaleString('id-ID')}
-  ${d.jadwal.map(j=>`<div style="margin-left:15px;font-size:12px">${j.tgl} - Rp${j.bayar.toLocaleString('id-ID')} - ${j.status}</div>`).join('')}
+  ${d.jadwal.map((j,jIdx)=>`<div class="jadwal">
+    <span>${j.tgl} - Rp${j.bayar.toLocaleString('id-ID')} - <span class="${j.status=='Belum Bayar'&&j.tgl<new Date().toISOString().split('T')[0]?'telat':''}">${j.status}</span></span>
+    <div>
+      ${j.status=='Belum Bayar'?`<button class="btn-wa" onclick="kirimWA('${d.nohp}','${d.nama}','${j.tgl}',${j.bayar})">WA</button>`:''}
+      ${j.status=='Belum Bayar'?`<button class="btn-lunas" onclick="bayarAngsuran(${pIdx},${jIdx})">Lunas</button>`:''}
+    </div>
+  </div>`).join('')}
   </div>`).join('');
-}
-function updateDashboard(){
+
+  let semuaAngsuran = [];
+  pinjaman.forEach((p,pIdx)=> p.jadwal.forEach((j,jIdx)=> semuaAngsuran.push({...j,nama:p.nama,nohp:p.nohp,pIdx,jIdx})));
+  listAngsuran.innerHTML = '<h3>Jadwal Tagihan</h3>' + semuaAngsuran.map(a=>`
+  <div class="list-item">${a.tgl} - <b>${a.nama}</b> - Rp${a.bayar.toLocaleString('id-ID')} - <span class="${a.status=='Belum Bayar'&&a.tgl<new Date().toISOString().split('T')[0]?'telat':''}">${a.status}</span>
+  <div style="float:right">
+    ${a.status=='Belum Bayar'?`<button class="btn-wa" onclick="kirimWA('${a.nohp}','${a.nama}','${a.tgl}',${a.bayar})">WA</button>`:''}
+    ${a.status=='Belum Bayar'?`<button class="btn-lunas" onclick="bayarAngsuran(${a.pIdx},${a.jIdx})">Lunas</button>`:''}
+  </div>
+  </div>`).join('');
+
   jmlNasabah.innerText = nasabah.length;
+  jmlSimpanan.innerText = simpanan.length;
   totalPinjam.innerText = pinjaman.length;
+  jmlAngsuran.innerText = semuaAngsuran.filter(a=>a.status=='Lunas').length;
   let total = pinjaman.reduce((a,b)=>a+b.total,0);
   totalDana.innerText = total.toLocaleString('id-ID');
+  totalAnggota.innerText = nasabah.length;
+  totalPinjamanRp.innerText = 'Rp ' + total.toLocaleString('id-ID');
 }
-tampilNasabah(); tampilPinjaman(); updateDashboard();
+tampilSemua();
 </script>
 </body>
 </html>
