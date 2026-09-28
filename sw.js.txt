@@ -1,7 +1,7 @@
 // KOPERASI TRI PUTRA ABADI - Secure SW + Config
 // GANTI 2 BARIS INI DENGAN PROJECT KAMU - ini satu-satunya tempat URL ada
-const SUPABASE_URL = "https://YOUR_PROJECT_ID.supabase.co";
-const SUPABASE_ANON_KEY = "YOUR_ANON_KEY_HERE";
+const SUPABASE_URL = "https://oekljkhftgcvuhepmxua.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9la2xqa2hmdGdjdnVoZXBteHVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg1MzE3NDEsImV4cCI6MjEwNDEwNzc0MX0.5UabBvkHpeTOb756ZQHdyTPd9b_5kz3RusWF-xiSaw0";
 
 const CACHE_NAME = 'tri-putra-abadi-v5-secure';
 const ASSETS = [
