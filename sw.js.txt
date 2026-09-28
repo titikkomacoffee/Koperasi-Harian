@@ -1,0 +1,52 @@
+// KOPERASI TRI PUTRA ABADI - Secure SW + Config
+// GANTI 2 BARIS INI DENGAN PROJECT KAMU - ini satu-satunya tempat URL ada
+const SUPABASE_URL = "https://YOUR_PROJECT_ID.supabase.co";
+const SUPABASE_ANON_KEY = "YOUR_ANON_KEY_HERE";
+
+const CACHE_NAME = 'tri-putra-abadi-v5-secure';
+const ASSETS = [
+  './',
+  './index.html',
+  './manifest.json',
+  './icon-192.png',
+  './icon-512.png',
+  './icon-bulat-1024.png',
+  './logo-full.png',
+  './maskable-512.png'
+];
+
+// Expose config ke window via postMessage
+self.addEventListener('install', e => {
+  e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(ASSETS)));
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', e => {
+  e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))));
+  self.clients.claim();
+});
+
+self.addEventListener('fetch', e => {
+  // Bypass supabase & pakasir api calls - jangan di-cache
+  if (e.request.url.includes('supabase.co') || e.request.url.includes('pakasir')) {
+    return;
+  }
+  e.respondWith(
+    caches.match(e.request).then(r => r || fetch(e.request).then(fetchRes => {
+      return caches.open(CACHE_NAME).then(cache => {
+        cache.put(e.request, fetchRes.clone());
+        return fetchRes;
+      });
+    })).catch(()=> caches.match('./index.html'))
+  );
+});
+
+// Endpoint untuk ambil config aman dari SW (dipanggil index.html)
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'GET_SUPABASE_CONFIG') {
+    event.ports[0].postMessage({
+      url: SUPABASE_URL,
+      anonKey: SUPABASE_ANON_KEY
+    });
+  }
+});
