@@ -3712,6 +3712,27 @@ registerServiceWorker()
 checkSession()
 
 })()
+// Function untuk menghitung angsuran berdasarkan tenor & tipe (harian / bulanan)
+function hitungAngsuran(jumlahPinjaman, fee, tipeAngsuran, tenor) {
+    const totalPinjaman = jumlahPinjaman + fee;
+    let angsuranPerPeriode = 0;
+
+    if (tipeAngsuran === 'harian') {
+        // Tenor Harian: 24, 30, 45, 60, 70 hari
+        angsuranPerPeriode = Math.ceil(totalPinjaman / tenor);
+    } else if (tipeAngsuran === 'bulanan') {
+        // Tenor Bulanan: 3, 6, 9, 12 bulan
+        angsuranPerPeriode = Math.ceil(totalPinjaman / tenor);
+    }
+
+    return {
+        totalPinjaman: totalPinjaman,
+        angsuranPerPeriode: angsuranPerPeriode,
+        tenor: tenor,
+        tipe: tipeAngsuran
+    };
+  }
+  
 </script>
 </body>
 </html>
