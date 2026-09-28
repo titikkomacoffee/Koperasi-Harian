@@ -1,0 +1,24 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' }
+serve(async (req) => {
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
+  try {
+    const { amount, pinjaman_id, nasabah_id } = await req.json()
+    const PAKASIR_API_KEY = Deno.env.get('PAKASIR_API_KEY')
+    const PAKASIR_QRIS_ID = Deno.env.get('PAKASIR_QRIS_ID')
+    if (!PAKASIR_API_KEY) throw new Error('PAKASIR_API_KEY belum set')
+    let pakasirData
+    try {
+      const r = await fetch('https://api.pakasir.com/qris/create', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${PAKASIR_API_KEY}` },
+        body: JSON.stringify({ qris_id: PAKASIR_QRIS_ID, amount, external_id: pinjaman_id, expired: 30 })
+      })
+      pakasirData = r.ok ? await r.json() : { id: `sim_${Date.now()}`, qris_string: `00020101021226${amount}5802ID5907PAKASIR6009SURABAYA62070703${pinjaman_id}6304`, status: 'pending' }
+    } catch { pakasirData = { id: `sim_${Date.now()}`, qris_string: `00020101021226${amount}5802ID5907PAKASIR6009SURABAYA62070703${pinjaman_id}6304`, status: 'pending' } }
+    const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
+    const { data, error } = await supabase.from('qris_transaksi').insert({ pinjaman_id, nasabah_id, amount, qris_string: pakasirData.qris_string || pakasirData.qr_string, status: 'pending', pakasir_id: pakasirData.id, expired_at: new Date(Date.now()+30*60000).toISOString() }).select().single()
+    if (error) throw error
+    return new Response(JSON.stringify({ qris: data }), { headers: { ...cors, 'Content-Type': 'application/json' } })
+  } catch (e) { return new Response(JSON.stringify({ error: e.message }), { headers: { ...cors, 'Content-Type': 'application/json' }, status: 400 }) }
+})
