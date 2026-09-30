@@ -1,15 +1,9 @@
 import { supabase } from './supabase.js'
-
 export async function createMidtransPayment({ amount, pinjaman_id, nasabah_id, koperasi_id, nama }) {
-  const { data, error } = await supabase.functions.invoke('pakasir-qris', {
+  const { data, error } = await supabase.functions.invoke('midtrans-payment', {
     body: { amount, pinjaman_id, nasabah_id, koperasi_id, customer_name: nama }
   })
   if (error) throw error
-  return data
+  return data // { order_id, token, redirect_url }
 }
-
-export function generateOrderId(prefix='KOP') {
-  const date = new Date().toISOString().slice(0,10).replace(/-/g,'')
-  const rand = Math.random().toString(36).substr(2,4).toUpperCase()
-  return `${prefix}-${date}-${rand}`
-}
+export function generateOrderId(prefix='KOP'){ return `${prefix}-${Date.now()}` }
