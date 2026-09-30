@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { HashRouter, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext.jsx'
 import { useState } from 'react'
 import Navbar from './components/common/Navbar.jsx'
@@ -58,13 +58,12 @@ function Layout() {
 export default function App() {
   return (
     <AuthProvider>
-      <BrowserRouter basename="/Koperasi-Harian">
+      <HashRouter>
         <Routes>
           <Route path="/auth/login" element={<Login />} />
-          <Route path="/auth/register" element={<Register />} />
-          <Route path="/*" element={<ProtectedRoute><Layout /></ProtectedRoute>} />
+          <Route path="/*" element={<Layout />} />
         </Routes>
-      </BrowserRouter>
+      </HashRouter>
     </AuthProvider>
   )
 }
