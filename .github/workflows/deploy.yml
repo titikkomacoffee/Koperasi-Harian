@@ -9,27 +9,17 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-            - name: Checkout
-        uses: actions/checkout@v4
-
-            - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'npm'
-
-            - name: Install deps
-        run: npm ci
-
-            - name: Build
-        run: npm run build
+      - run: npm ci
+      - run: npm run build
         env:
           VITE_SUPABASE_URL: https://eiosyymlsfxxsdgnxqif.supabase.co
-          VITE_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.[STRIPPED 127 bytes].[STRIPPED 67 bytes]: ${{ secrets.MIDTRANS_CLIENT_KEY }}
-          VITE_MIDTRANS_IS_PRODUCTION: false
-
-            - name: Deploy to gh-pages
-        uses: JamesIves/github-pages-deploy-action@v4
+          VITE_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.[STRIPPED 127 bytes].7vACrpdn8d7_l4zxmICknkhbTFkSLdvVHeN0DujyGQM
+      - uses: JamesIves/github-pages-deploy-action@v4
         with:
           folder: dist
           branch: gh-pages
