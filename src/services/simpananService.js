@@ -1,5 +1,0 @@
-import { supabase } from '../config/supabase.js'
-export const tambahSimpanan = async (payload) => {
-  const { data, error } = await supabase.from('simpanan').insert(payload).select().single()
-  if (error) throw error; return data
-}
