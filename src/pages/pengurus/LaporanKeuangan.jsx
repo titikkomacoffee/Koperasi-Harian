@@ -1,0 +1,1 @@
+export default function LaporanKeuangan(){ return <div className="p-4"><h1 className="font-bold">Laporan Keuangan</h1><div className="bg-white rounded-2xl p-4 border mt-3 text-xs">Laporan keuangan koperasi</div></div> }
