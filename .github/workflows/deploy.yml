@@ -16,12 +16,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: 20, cache: npm }
-      - run: npm ci
+        with:
+          node-version: 20
+      - run: npm install
       - run: npm run build
       - uses: actions/configure-pages@v4
       - uses: actions/upload-pages-artifact@v3
-        with: { path:./dist }
+        with:
+          path:./dist
   deploy:
     environment:
       name: github-pages
