@@ -1,0 +1,1 @@
+export default function DashboardAdmin(){ return <div className="p-4"><h1 className="font-bold">Dashboard Pengurus</h1><div className="bg-white rounded-2xl p-4 border mt-3 text-xs">Statistik pengurus</div></div> }
